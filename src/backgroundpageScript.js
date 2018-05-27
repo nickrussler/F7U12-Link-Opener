@@ -23,6 +23,14 @@
 				});
 			}
 
+
+			function createTab(url, selected){
+				chrome.tabs.create({
+					url : url,
+					selected : selected
+				});
+			}
+
 			function openUrl(urls, index, count, tabid) {
 
 				if(index == urls.length) {
@@ -38,12 +46,12 @@
 
 				if(!url[1].match("javascript:.*")) {
 
-					var opencomments = (localStorage["opencomments"] == "true");
+					var openingComportment = localStorage["openingComportment"];
 					var openvisitedlinks = (localStorage["openvisitedlinks"] == "true");
 					var opennsfwlinks = (localStorage["opennsfwlinks"] == "true");
 					var openlinksdirectly = (localStorage["openlinksdirectly"] == "true");
 					var tabslimit = localStorage["tabslimit"];
-					
+
 					if(!opennsfwlinks && ((url[0].toLowerCase().indexOf("nsfw") != -1) || url[3])) {
 						openUrl(urls, index + 1, count, tabid);
 						return;
@@ -69,9 +77,9 @@
 							var isIReddIt = url[5] && (url[5].toLowerCase().indexOf("i.redd.it") != -1);
 							var isIReddituploads = url[5] && (url[5].toLowerCase().indexOf("i.reddituploads.com") != -1);
 
-							if(isIReddIt || isIReddituploads) {								
+							if(isIReddIt || isIReddituploads) {
 								url[1] = url[5];
-								
+
 								// add the original URL to the history
 								chrome.history.addUrl({
 									url : url[1]
@@ -85,16 +93,19 @@
 							index : index
 						});
 
-						chrome.tabs.create({
-							url : url[1],
-							selected : false
-						});
-
-						if(opencomments) {
-							chrome.tabs.create({
-								url : url[2],
-								selected : false
-							});
+						switch(openingComportment) {
+						    case "comments":
+    							createTab(url[2], false);
+						        break;
+						    case "articles":
+								createTab(url[1], false);
+						        break;
+					        case "both":
+					        	createTab(url[1], false);
+								createTab(url[2], false);
+						        break;
+						    default:
+								createTab(url[1], false);
 						}
 
 						openUrl(urls, index + 1, count + 1, tabid);
@@ -104,6 +115,15 @@
 
 			function checkVersion() {
 
+				//migration of the 'opencomments' prop to 'openingComportment' on localStorage
+				function updateOpeningComportment(){
+					if(localStorage["opencomments"] == "true"){
+						localStorage["openingComportment"] = "comments";
+					}else{
+						localStorage["openingComportment"] = "articles";
+					}
+				}
+
 				function onInstall() {
 					chrome.tabs.create({
 						url : "options.html",
@@ -112,6 +132,9 @@
 				}
 
 				function onUpdate() {
+
+					updateOpeningComportment();
+
 					chrome.tabs.create({
 						url : "changelog.html",
 						selected : true
@@ -125,7 +148,7 @@
 
 				// Check if the version has changed.
 				var currVersion = getVersion();
-				var prevVersion = localStorage['version']
+				var prevVersion = localStorage['version'];
 				if(currVersion != prevVersion) {
 					// Check if we just installed this extension.
 					if( typeof prevVersion == 'undefined') {
@@ -139,7 +162,7 @@
 
 			function init() {
 
-				var opencomments = localStorage["opencomments"];
+				var openingComportment = localStorage["openingComportment"];
 				var openvisitedlinks = localStorage["openvisitedlinks"];
 				var opennsfwlinks = localStorage["opennsfwlinks"];
 				var openlinksdirectly = localStorage["openlinksdirectly"];
@@ -148,8 +171,8 @@
 
 				localStorage["oldkeyboardshortcut"] = undefined;
 
-				if(!opencomments) {
-					localStorage["opencomments"] = "false";
+				if(!openingComportment) {
+					localStorage["openingComportment"] = "articles";
 				}
 
 				if(!openvisitedlinks) {
@@ -195,7 +218,7 @@
 				});
 				checkVersion();
 			}
-			
+
 document.addEventListener('DOMContentLoaded', function () {
   init();
 });
