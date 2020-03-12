@@ -44,7 +44,7 @@ chrome.extension.onRequest.addListener(function(request, sender, callback) {
 				var isLinkNSFW = isNSFW(jquery_set_links[i]);
 				var linkWasNotMarkedVisited = ($(jquery_set_links[i]).parents('.visited').length == 0);
 				
-				data.push(new Array(jquery_set_links[i].text, jquery_set_links[i].href, jquery_set_comments[i].href, isLinkNSFW, linkWasNotMarkedVisited));
+				data.push(new Array(jquery_set_links[i]?.text, jquery_set_links[i]?.href, jquery_set_comments[i]?.href, isLinkNSFW, linkWasNotMarkedVisited));
 			}
 
 			if(data.length > 0) {
